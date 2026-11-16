@@ -1,0 +1,6 @@
+[server]
+# matches the 15 MB limit enforced in assistant/image_tools.py
+maxUploadSize = 15
+
+[browser]
+gatherUsageStats = false

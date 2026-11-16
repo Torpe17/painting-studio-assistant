@@ -1,0 +1,11 @@
+streamlit>=1.40
+google-genai>=1.30
+ollama>=0.5
+numpy
+pillow
+scikit-learn
+httpx
+python-dotenv
+pydantic>=2
+pyyaml
+pytest
