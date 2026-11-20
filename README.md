@@ -57,6 +57,7 @@ A felület: http://localhost:8501
 app.py                     Streamlit felület (angol nyelvű; Tabler ikonok, barátságos hibaüzenetek)
 assets/icons/             Tabler Icons SVG-k (MIT licenc) – offline is működnek
 .streamlit/config.toml    Streamlit beállítás (feltöltési korlát: 15 MB)
+.cache/                   helyi adatok, gitből kizárva: results/ (mentett eredmények), paintings/ (saját festmények)
 assistant/
   agent.py                 orchestrator: skill futtatás, tool-ciklus, önjavítás
   skills.py                SKILL.md betöltő (progressive disclosure)
