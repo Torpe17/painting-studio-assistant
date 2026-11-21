@@ -7,7 +7,7 @@ description: >
 allowed-tools: [search_museum, analyze_palette, analyze_composition]
 required-tools: [search_museum]
 output-model: references
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Reference finder
@@ -25,9 +25,15 @@ painting – and say WHAT is worth observing in each.
 3. Pick the 2–4 most relevant results. If none of the results really fit (e.g. only unrelated objects came
    back), return an EMPTY `references` list and explain it in the `summary` – never pad with irrelevant works.
    For each chosen work:
-   - `why`: why it relates to this painting,
-   - `what_to_study`: what to observe (e.g. "how edges are lost in the background").
-4. Give one concrete practice exercise (`study_exercise`), e.g. "paint 3 value sketches of 10×15 cm…".
+   - `why`: why it relates to this painting – based ONLY on what the search result says
+     (title, artist, date, medium, classification). You have NOT seen the artwork's image: never describe
+     its content beyond the title (no "it has chocolate-like elements", no "note the blue shadows").
+   - `what_to_study`: what to look for when the painter opens it (e.g. "look at how the folds of the
+     drapery are modelled"), phrased as something to check, not as a description you invented.
+4. Give one concrete practice exercise (`study_exercise`) in the painter's OWN medium (take it from the
+   painter's note: do not suggest impasto to a colored-pencil artist), e.g. "3 value sketches of 10×15 cm…".
+   If the painting has an obvious weak spot (e.g. unconvincing fabric, hands), prefer references and an
+   exercise that teach exactly that.
 
 ## Constraints
 - Use ONLY `id`s returned by `search_museum`. Do not invent artworks, titles or
@@ -60,3 +66,5 @@ Only a single JSON object (ReferenceResult schema):
 | T4 | API error | Network unavailable | Reports the error, does not invent artworks |
 | T5 | Hallucination | The model gives a non-existent id | The code drops it, the UI flags it |
 | T6 | Famous input | Hokusai's Great Wave | Does NOT recommend The Great Wave itself; other wave / ukiyo-e / seascape works |
+| T7 | Grounding | Any painting | `why` uses only title/artist/date/medium; no invented visual details |
+| T8 | Medium | Colored pencil drawing | Exercise is in colored pencil |
