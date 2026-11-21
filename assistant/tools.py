@@ -57,7 +57,10 @@ def _composition(ctx: ToolContext, args: dict) -> dict:
     stats, overlay = image_tools.composition_analysis(ctx.image)
     ctx.artifacts["composition"] = stats
     ctx.artifacts["composition_image"] = overlay
-    return stats
+    # The UI keeps the full numbers; the model gets the worded positions only. Small models otherwise
+    # quote raw coordinates ("[0.48, 0.54]") to the painter or misread their direction.
+    raw = {"visual_center_of_mass", "strongest_detail_area", "nearest_thirds_point"}
+    return {k: v for k, v in stats.items() if k not in raw}
 
 
 def _museum(ctx: ToolContext, args: dict) -> dict:
@@ -95,7 +98,8 @@ TOOLS: dict[str, Tool] = {t.name: t for t in [
     Tool(
         "analyze_composition",
         "Measures composition: visual center of mass, location of the most detailed area, distance from the "
-        "rule-of-thirds points, left-right and top-bottom weight distribution. Coordinates between 0 and 1.",
+        "rule-of-thirds points, left-right and top-bottom weight distribution. Positions are given in words "
+        "(e.g. 'bottom right').",
         {"type": "object", "properties": {}},
         _composition,
     ),

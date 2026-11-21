@@ -27,6 +27,8 @@ CRITIQUE = {
     "strengths": ["strong contrast"],
     "categories": [{"name": n, "score": 6, "observation": "o", "reasoning": "r"} for n in
                    ["composition", "value", "color", "brushwork and edges", "focal point and mood"]],
+    "area_review": [{"area": "face", "assessment": "a"}, {"area": "robe", "assessment": "b"}],
+    "weakest_area": {"area": "the robe", "problem": "folds ignore the body"},
     "suggestions": [{"title": "t", "how": "h", "priority": 1}],
     "style_respected": "s",
     "limitations": "l",
@@ -168,3 +170,12 @@ def test_review_references_empty_vs_invented():
     import pytest
     with pytest.raises(ValueError):
         guard.review_references(invented, {"met-1": {}})
+
+
+def test_review_critique_flags_generic_weakest_area():
+    from assistant import guard
+    from assistant.schemas import CritiqueResult
+    ok = CritiqueResult.model_validate(CRITIQUE)
+    assert not any("weakest area" in w for w in guard.review_critique(ok, None))
+    vague = CritiqueResult.model_validate({**CRITIQUE, "weakest_area": {"area": "Value", "problem": "p"}})
+    assert any("weakest area" in w for w in guard.review_critique(vague, None))

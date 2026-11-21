@@ -763,6 +763,14 @@ with tab_c:
             with st.expander(f"**{c.name.capitalize()}** — {c.score}/10"):
                 st.progress(c.score / 10)
                 st.markdown(f"**Observation:** {c.observation}\n\n**Interpretation:** {c.reasoning}")
+        weak = getattr(res, "weakest_area", None)  # results saved before skill v2.0 have no such field
+        if weak:
+            heading("focus-2", "Needs the most work")
+            callout("warning", weak.problem, title=weak.area[:1].upper() + weak.area[1:])
+            areas = getattr(res, "area_review", None) or []
+            if areas:
+                with st.expander("Area-by-area check"):
+                    st.markdown("\n".join(f"- **{a.area}:** {a.assessment}" for a in areas))
         heading("target", "Suggestions")
         for s in sorted(res.suggestions, key=lambda s: s.priority):
             st.markdown(f"**{s.priority}. {s.title}** — {s.how}")

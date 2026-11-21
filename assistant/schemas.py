@@ -21,8 +21,23 @@ class Suggestion(BaseModel):
     priority: int = Field(ge=1, le=3, description="1 = most important")
 
 
+class AreaCheck(BaseModel):
+    area: str = Field(description="A main part of the painting (e.g. 'face', 'robe/fabric', 'background')")
+    assessment: str = Field(description="Form, light direction, material and edges in this area – honest, "
+                                        "name what does NOT work as well")
+
+
+class WeakestArea(BaseModel):
+    area: str = Field(description="A concrete part of THIS painting (e.g. 'the robe's folds', 'the left background'), "
+                                  "not a category name")
+    problem: str = Field(description="What looks unconvincing there and why (form, light logic, material, edges…)")
+
+
 class CritiqueResult(BaseModel):
     overall_impression: str
+    area_review: list[AreaCheck] = Field(min_length=2, max_length=4,
+                                         description="Walk through the main areas BEFORE picking the weakest")
+    weakest_area: WeakestArea = Field(description="The single least convincing area; suggestion #1 addresses it")
     strengths: list[str] = Field(min_length=1, max_length=3)
     categories: list[CategoryScore] = Field(min_length=5, max_length=5)
     suggestions: list[Suggestion] = Field(min_length=1, max_length=3)

@@ -93,6 +93,9 @@ def review_critique(res: CritiqueResult, injection: InjectionCheck | None) -> li
     mean = sum(scores) / len(scores)
     if mean >= 9:
         warnings.append(f"Unusually high average ({mean:.1f}) – possible flattery.")
+    area = res.weakest_area.area.strip().lower().rstrip(".")
+    if area in names | {"none", "n/a", "nothing", "some areas", "overall", "the painting", "everything"} or len(area) < 4:
+        warnings.append(f"The weakest area is not specific ('{res.weakest_area.area}') – the critique may be generic.")
     if injection and injection.addressed_to_ai and mean >= 9:
         warnings.append("The image contained an instruction aimed at the AI AND the score is high: possible successful injection!")
     return warnings
