@@ -41,7 +41,7 @@ flowchart LR
 
 | Komponens | Fájl | Feladat |
 |---|---|---|
-| Felület | `app.py` | Angol nyelvű Streamlit felület: kép kiválasztása, modellválasztás (Gemini-modell legördülő), mindig látható adatvédelmi jelzés, mindig látható eredményfülek saját gombokkal (Critique, Analysis, References, Log (tool calls), Security), képenként a gépen mentett eredmények újrafuttató gombbal (`.cache/results/`, gitből kizárva), barátságos hibaüzenetek (a nyers hiba csak a Log fülön) |
+| Felület | `app.py` | Angol nyelvű Streamlit felület: kép kiválasztása, modellválasztás (Gemini-modell legördülő), mindig látható adatvédelmi jelzés, mindig látható eredményfülek saját gombokkal (Critique, Analysis, References, Log (tool calls), Security), képenként a gépen mentett eredmények újrafuttató gombbal (`.cache/results/`, gitből kizárva), saját festmények galériája (feltöltés, kiválasztás, törlés, eredmény-jelvények; a megtisztított JPEG a `.cache/paintings/` mappában, csak ezen a gépen), barátságos hibaüzenetek (a nyers hiba csak a Log fülön) |
 | Orchestrator | `assistant/agent.py` | Skill futtatása, tool-ciklus, kötelező tool-ok kikényszerítése, önjavítás |
 | Skill-betöltő | `assistant/skills.py` | SKILL.md YAML fejléc + törzs, fokozatos felfedés |
 | Tool-regiszter | `assistant/tools.py` | JSON séma a modellnek + Python függvény + jogosultság-ellenőrzés |
@@ -103,7 +103,37 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
      címre ne keressen; egy mű csak egyszer szerepeljen (+ T6 teszteset). Utána: Kuniyoshi és Eishi ukiyo-e hullámai.
   3. *Modellválasztás:* a „gondolkodó” `qwen3-vl:8b` 4–10× lassabb volt érdemi minőségi különbség nélkül → alapértelmezett
      a `qwen3-vl:8b-instruct`.
-- ✏️ További prompt-iterációk: írd le, mit változtattál a saját tesztjeid alapján (pl. hízelgés csökkentése, stílus tisztelete).
+  4. *Kritika skill v1.1 → v2.1 – a saját festményeim alapján (csak lokális modellel, a képek nem hagyták el a gépet).*
+     **Probléma:** az egyik figurális festményen a ruha redői természetellenesek, de a kritika ezt nem jelezte, sőt
+     dicsérte („confident … especially in the figure's face and robe”). A 4 saját kép kritikáinak elemzése:
+     - a prompt egyetlen példajavaslatát („darken the background value by 1–2 steps around the head”) a modell
+       mind a 4 képnél szinte szó szerint átvette (a többi képnél is ugyanígy, csak a tárgyat cserélve);
+     - a pontszámok sablonosak: mind a 4 kép kompozíció 8, szín 9, valőr 6;
+     - nem volt kategória a formára/anyagszerűségre, és a „minden állítás a mért adatokra épüljön” szabály
+       elriasztott a nem mérhető (szemmel látható) hibáktól;
+     - médiumtól független szóhasználat (színes ceruzánál „brushwork”), képszerkesztő-nyelv („+10–20% telítettség”),
+       nyers koordináták a szövegben („[0.48, 0.54]”).
+     **Változtatások:** (a) új séma-mezők a pontozás ELŐTT: `area_review` (2–4 fő terület egyenkénti vizsgálata:
+     forma, fényirány, anyag, élek – strukturált gondolatmenet) és `weakest_area` (a leggyengébb konkrét terület);
+     az 1. javaslatnak ezt kell javítania; (b) a példajavaslat törölve, minden javaslat helyet + fizikai festési
+     lépést nevez meg a művész médiumában (a megjegyzésből); (c) horgonyzott pontozási skála (6-ról indul, csak
+     bizonyítékkal mozdul); (d) stílushoz igazított kérdések (absztrakt: ritmus, forma-változatosság; sziluett:
+     a laposság választás) + önellenőrzés („ha a gyengeség valójában a stílus, válassz mást”); (e) „egy terület =
+     egy tárgy”; (f) a kompozíció-tool a modellnek már csak szóbeli pozíciókat ad (a felület a teljes számokat kapja);
+     (g) kódos ellenőrzés: általános/kategórianév „leggyengébb terület” → figyelmeztetés.
+     **Eredmény (lokális, qwen3-vl:8b-instruct):** a ruha redőit a modell minden futásban kritikusan értékelte a
+     területvizsgálatban („don't convincingly follow the body underneath… more like abstract shapes than
+     gravity-driven drapery”), 2 futásból 1-ben ez lett a leggyengébb terület, a másikban egy kisebb kellék (a ruha
+     a 2. javaslat). A másik képeknél is egy konkrét részlet lett a cél; a javaslatok médiumspecifikusak
+     („use a softer pencil or a blending stump”, „glaze… white acrylic”). Közben két **regressziót** fogtunk meg és
+     javítottunk: Kandinszkijnél „következetes fényirányt” kért (→ absztrakt-szabály, utána helyes), az egyik sziluettes képnél
+     a szándékos sziluett laposságát hibának vette – ez a 8B modellnél a szabály ellenére is megmaradt (korlát).
+     *Megjegyzés az értékelés tisztaságáról:* a promptba került ellenőrző kérdés („do fabric folds follow the body
+     and hang with gravity?”) általános festészeti tudás, de a ruharedők hibáját ismerve fogalmaztuk – ezért a Vermeernél
+     is megjelent a redők kritikája (ellenőrzőlista-visszhang). Független ellenőrzéshez új saját képek kellenek.
+  5. *Referencia skill v1.3 → v1.4:* a modell olyan tartalmat tulajdonított a múzeumi műveknek, amit nem látott
+     (Gauguin csendéletében „chocolate-like elements”), és színes ceruzás rajzhoz impasztót javasolt. Új szabály:
+     a „why” csak a visszakapott metaadatokra (cím, alkotó, dátum, technika) épülhet, a gyakorlat a művész médiumában.
 
 ## 6. Biztonság (7. modul, OWASP LLM Top 10 2025)
 
@@ -122,7 +152,8 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
 - **Támogat, nem helyettesít:** a rendszer nem generál és nem „javít át” képet; a javaslatok a festőnek szólnak.
 - **A művészek munkájának tisztelete:** a generatív MI-t sok művész a tréningadatok engedély nélküli
   felhasználása miatt bírálja – ez a projekt csak elemez, és csak közkincs műveket ajánl, forrásmegjelöléssel.
-- **Adatvédelem:** a saját, nem publikus mű alapértelmezetten privát, és csak lokális modellhez mehet; a felület
+- **Adatvédelem:** a saját, nem publikus mű alapértelmezetten privát (festményenként mentve), és csak lokális modellhez
+  mehet; a galéria képei EXIF/GPS nélkül, csak a helyi gépen tárolódnak, és egy kattintással törölhetők; a felület
   a kép alatt mindig mutatja, hová kerül a kép (helyben marad / Geminihez kerül / blokkolva).
 - **Stílus tisztelete:** a skill kifejezetten tiltja, hogy egy stílust (pl. expresszív, absztrakt) hibának tekintsen –
   az MI ne tolja egy „helyes” esztétika felé a festőket (homogenizáció, torzítás).
@@ -197,6 +228,8 @@ Eredmények – Gemini (`gemini-3.5-flash`): `eval/results/gemini_gemini-3.5-fla
   oszlop kis mintán (6 sikeres kritika) alapul; több nap/modell kellene a lokálissal azonos méretű méréshez.
 - A kis lokális modell (8B) a nyers mért számokat néha félreértelmezi (koordináta-irány, arányok sorrendje) – ezért
   a tool-ok szóban is megfogalmazzák a lényeget; a „gondolkodó” 8b változat ráadásul lassú (kritika ~80–100 s).
+- A 8B lokális modell a stílus-szabályt nem mindig tartja be (szándékos sziluettet „lapos formaként” kritizál),
+  és a leggyengébb terület kiválasztása futásonként ingadozhat → több futás összevetése vagy nagyobb lokális modell.
 - Fotó minősége (fény, perspektíva) torzítja a mérést → fotózási útmutató, színkártya-kalibráció.
 - További skillek: **festékkeverési recept** (paletta → valós pigmentek), **fejlődési napló** (képek összevetése időben).
 - LLM-as-a-Judge a kritika minőségére; több értékelő ember bevonása.
