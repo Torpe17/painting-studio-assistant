@@ -85,7 +85,7 @@ skills/
   reference-finder/SKILL.md
 samples/                   public-domain test images (incl. one with an injected instruction)
 eval/run_eval.py           metrics: schema compliance, consistency, injection, hallucination
-docs/                      documentation, presentation (Hungarian)
+docs/                      documentation (PDF + Markdown), architecture diagram, screenshots (Hungarian)
 ```
 
-Details (in Hungarian): [docs/DOKUMENTACIO.md](docs/DOKUMENTACIO.md)
+Details (in Hungarian): [docs/DOKUMENTACIO.md](docs/DOKUMENTACIO.md) · [PDF](docs/Festomuhely_asszisztens_dokumentacio.pdf)
