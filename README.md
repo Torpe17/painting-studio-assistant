@@ -7,12 +7,6 @@ go to the local model, and this is enforced in code.
 
 ![The app with a public-domain sample](docs/kepernyokepek/overview.png)
 
-The app is in **English**: the UI, the model's answers (the system prompt and the SKILL.md files ask for English
-output), the error messages and the code. The project documentation in `docs/` is in Hungarian.
-
-> Semester project for *Mesterséges intelligencia eszközök és alkalmazások* (AI Tools and Applications,
-> VEMIVIM333MA), University of Pannonia, 2026/27/1.
-
 ## Features
 
 - **Measure first, then judge:** classical image processing (k-means palette, value study, visual center of mass,
