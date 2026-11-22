@@ -1,77 +1,97 @@
-# Festőműhely asszisztens (Painting Studio Assistant)
+# Painting Studio Assistant (Festőműhely asszisztens)
 
-MI-alapú festőtanár: egy festmény fotójából **mért képadatokra** (paletta, valőr, kompozíció)
-épülő, strukturált kritikát ad, és **valós múzeumi mesterműveket** ajánl tanulási referenciaként.
-Két modellel fut: **Gemini** (felhő) vagy **lokális modell** (Ollama) – a saját, nem publikus
-művek csak a lokális modellhez kerülhetnek (kódban kikényszerítve).
+An AI painting tutor. From a photo of a painting it gives a structured critique built on **measured image data**
+(palette, values, composition) and recommends **real museum masterpieces** as learning references.
+It runs on two models: **Gemini** (cloud) or a **local model** (Ollama). Your own, unpublished paintings can only
+go to the local model, and this is enforced in code.
 
-Az alkalmazás nyelve **angol**: a felület, a modell válaszai (a rendszerprompt és a SKILL.md-k angol kimenetet kérnek),
-a hibaüzenetek és a kód szövegei. A dokumentáció (`docs/`) magyar.
+![The app with a public-domain sample](docs/kepernyokepek/overview.png)
 
-> Mesterséges intelligencia eszközök és alkalmazások (VEMIVIM333MA), Pannon Egyetem, 2026/27/1 – féléves projekt.
+The app is in **English**: the UI, the model's answers (the system prompt and the SKILL.md files ask for English
+output), the error messages and the code. The project documentation in `docs/` is in Hungarian.
 
-## Telepítés
+> Semester project for *Mesterséges intelligencia eszközök és alkalmazások* (AI Tools and Applications,
+> VEMIVIM333MA), University of Pannonia, 2026/27/1.
+
+## Features
+
+- **Measure first, then judge:** classical image processing (k-means palette, value study, visual center of mass,
+  rule of thirds) produces the numbers; the LLM interprets them and adds what only the eye can judge.
+- **Two skills** as `SKILL.md` files: `painting-critique` and `reference-finder`, each limited to its own tools.
+- **Four tools** with JSON schemas, called in a manual tool-calling loop that works the same for Gemini and Ollama.
+- **Structured output:** Pydantic schemas with a self-repair loop. The critique names the weakest area of the
+  painting and gives concrete, medium-specific painting steps.
+- **Museum references** from The Met and the Art Institute of Chicago (public domain only); invented artworks are
+  dropped in code.
+- **Security:** a separate pre-screening call detects prompt-injection text hidden in the image; output checks flag
+  flattery and possible successful injections.
+- **Privacy:** private artwork + cloud model = blocked; EXIF/GPS data is stripped; your paintings and results are
+  stored only on your computer (`.cache/`, git-ignored).
+
+## Installation
 
 ```bash
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -r requirements.txt
-cp .env.example .env            # majd írd be a GEMINI_API_KEY-t
-.venv/bin/python scripts/fetch_samples.py   # közkincs tesztképek letöltése
+cp .env.example .env            # then add your GEMINI_API_KEY
 ```
 
-**Gemini kulcs:** https://aistudio.google.com/apikey (ingyenes szint elég). Csak a `.env`-be kerül, gitbe nem.
+The public-domain sample images are included in `samples/`; `scripts/fetch_samples.py` downloads them again if needed.
 
-> **Ingyenes keret:** **kb. 20 kérés/nap/modell** (a keret modellenként külön számít). Egy kritika ≈ 3 kérés
-> (előszűrés + tool-hívás + végső JSON), egy referenciakeresés ≈ 4–6. Alapértelmezett modell: `gemini-3.5-flash`;
-> ha elfogy, a felület a „Daily Gemini quota used up” üzenetet mutatja – válts az oldalsáv **Gemini model**
-> legördülőjében pl. `gemini-3.5-flash-lite`-ra, vagy várj másnapig.
+**Gemini key:** https://aistudio.google.com/apikey (the free tier is enough). It only goes into `.env`, never into git.
 
-**Lokális modell (Ollama):**
+> **Free tier:** about **20 requests/day per model** (each model has its own quota). A critique takes ~3–4 requests
+> (pre-screening + tool calls + final JSON), a reference search ~4–6. The default model is `gemini-3.5-flash`;
+> when the quota runs out, the app shows "Daily Gemini quota used up". Pick another model (e.g.
+> `gemini-3.5-flash-lite`) in the **Gemini model** dropdown in the sidebar, or wait until the next day.
+
+**Local model (Ollama):**
 ```bash
 brew install ollama
-brew services start ollama        # háttérszolgáltatásként (vagy: ollama serve)
-ollama pull qwen3-vl:8b-instruct  # alapértelmezett: látó + tool-hívó, gondolkodás nélkül (~6 GB)
-ollama pull qwen3-vl:8b           # opcionális: „gondolkodó” változat, összehasonlításhoz
+brew services start ollama        # runs as a background service (or: ollama serve)
+ollama pull qwen3-vl:8b-instruct  # default: vision + tool calling, no "thinking" (~6 GB)
+ollama pull qwen3-vl:8b           # optional: "thinking" variant, for comparison
 ```
-Futásidő (M5 Max): `8b-instruct` – kritika ~20 s, referenciák ~15–20 s; a „gondolkodó” `8b` – kritika ~80–100 s,
-referenciák ~3 perc, érdemi minőségi előny nélkül. Erősebb gépen: `qwen3-vl:30b`. Ha egy modell nem tud tool-t hívni, a rendszer automatikusan
-„fallback” módra vált (a kód futtatja az eszközöket, az eredményt promptban adja át).
+Run times (M5 Max): `8b-instruct` – critique ~20–30 s, references ~15–20 s; the thinking `8b` – critique ~80–100 s,
+references ~3 min, with no real quality gain. On a stronger machine: `qwen3-vl:30b`. If a model cannot call tools,
+the system switches to "fallback" mode automatically (the code runs the tools and passes the results in the prompt).
 
-## Futtatás
+## Running
 
 ```bash
 .venv/bin/streamlit run app.py
 ```
 
-A felület: http://localhost:8501
+Then open http://localhost:8501
 
 ```bash
-.venv/bin/python -m pytest -q                              # egységtesztek (hálózat/LLM nélkül)
-.venv/bin/python eval/run_eval.py --provider ollama --runs 3   # kiértékelés
-.venv/bin/python eval/run_eval.py --provider gemini --runs 2 --images starry --no-references   # kvótabarát
+.venv/bin/python -m pytest -q                                   # unit tests (no network or LLM needed)
+.venv/bin/python eval/run_eval.py --provider ollama --runs 3    # evaluation
+.venv/bin/python eval/run_eval.py --provider gemini --runs 2 --images starry --no-references   # quota-friendly
 ```
 
-## Felépítés
+## Project structure
 
 ```
-app.py                     Streamlit felület (angol nyelvű; Tabler ikonok, barátságos hibaüzenetek)
-assets/icons/             Tabler Icons SVG-k (MIT licenc) – offline is működnek
-.streamlit/config.toml    Streamlit beállítás (feltöltési korlát: 15 MB)
-.cache/                   helyi adatok, gitből kizárva: results/ (mentett eredmények), paintings/ (saját festmények)
+app.py                     Streamlit UI (English; Tabler icons, friendly error messages)
+assets/icons/              Tabler Icons SVGs (MIT license) – work offline
+.streamlit/config.toml     Streamlit settings (upload limit: 15 MB)
+.cache/                    local data, git-ignored: results/ (saved results), paintings/ (your own paintings)
 assistant/
-  agent.py                 orchestrator: skill futtatás, tool-ciklus, önjavítás
-  skills.py                SKILL.md betöltő (progressive disclosure)
-  tools.py                 tool-regiszter (JSON séma + függvény, jogosultság-ellenőrzés)
-  image_tools.py           paletta (k-means), valőrtanulmány, kompozíció – klasszikus képfeldolgozás
-  museum.py                The Met + Art Institute of Chicago nyílt API
-  guard.py                 biztonság: adatvédelem, injection-előszűrés, kimenet-ellenőrzés
-  schemas.py               Pydantic kimeneti sémák
-  llm/                     szolgáltató-független réteg: gemini_provider, ollama_provider
+  agent.py                 orchestrator: runs skills, tool loop, self-repair
+  skills.py                SKILL.md loader (progressive disclosure)
+  tools.py                 tool registry (JSON schema + function, permission check)
+  image_tools.py           palette (k-means), value study, composition – classical image processing
+  museum.py                The Met + Art Institute of Chicago open APIs
+  guard.py                 security: privacy, injection pre-screening, output checks
+  schemas.py               Pydantic output schemas
+  llm/                     provider-agnostic layer: gemini_provider, ollama_provider
 skills/
   painting-critique/SKILL.md
   reference-finder/SKILL.md
-eval/run_eval.py           mérőszámok: sémakövetés, következetesség, injection, hallucináció
-docs/                      dokumentáció, prezentációvázlat
+samples/                   public-domain test images (incl. one with an injected instruction)
+eval/run_eval.py           metrics: schema compliance, consistency, injection, hallucination
+docs/                      documentation, presentation (Hungarian)
 ```
 
-Részletek: [docs/DOKUMENTACIO.md](docs/DOKUMENTACIO.md)
+Details (in Hungarian): [docs/DOKUMENTACIO.md](docs/DOKUMENTACIO.md)
