@@ -2,7 +2,7 @@
 
 *(Az alkalmazás angol nyelvű, a felületen: Painting Studio Assistant.)*
 
-*Mesterséges intelligencia eszközök és alkalmazások (VEMIVIM333MA), 2026/27/1 · Készítette: [név, Neptun-kód]*
+*Mesterséges intelligencia eszközök és alkalmazások (VEMIVIM333MA), 2026/27/1 · Készítette: Luksa Laura (D7CFWT)*
 
 > ✏️ = a saját mérésekkel / tapasztalatokkal kitöltendő részek.
 
@@ -121,10 +121,10 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
      a laposság választás) + önellenőrzés („ha a gyengeség valójában a stílus, válassz mást”); (e) „egy terület =
      egy tárgy”; (f) a kompozíció-tool a modellnek már csak szóbeli pozíciókat ad (a felület a teljes számokat kapja);
      (g) kódos ellenőrzés: általános/kategórianév „leggyengébb terület” → figyelmeztetés.
-     **Eredmény (lokális, qwen3-vl:8b-instruct):** a ruha redőit a modell minden futásban kritikusan értékelte a
-     területvizsgálatban („don't convincingly follow the body underneath… more like abstract shapes than
-     gravity-driven drapery”), 2 futásból 1-ben ez lett a leggyengébb terület, a másikban egy kisebb kellék (a ruha
-     a 2. javaslat). A másik képeknél is egy konkrét részlet lett a cél; a javaslatok médiumspecifikusak
+     **Eredmény (lokális, qwen3-vl:8b-instruct, 4 futás a területvizsgálattal):** a ruha hibáját a modell mind a
+     4 futásban jelezte (v1.1-ben egyszer sem): 3-szor a területvizsgálatban („don't convincingly follow the body
+     underneath… more like abstract shapes than gravity-driven drapery”), 1-szer leggyengébb területként; a másik
+     3 futásban egy kisebb kellék lett a leggyengébb terület, a ruha pedig a 2–3. javaslatban szerepelt. A másik képeknél is egy konkrét részlet lett a cél; a javaslatok médiumspecifikusak
      („use a softer pencil or a blending stump”, „glaze… white acrylic”). Közben két **regressziót** fogtunk meg és
      javítottunk: Kandinszkijnél „következetes fényirányt” kért (→ absztrakt-szabály, utána helyes), az egyik sziluettes képnél
      a szándékos sziluett laposságát hibának vette – ez a 8B modellnél a szabály ellenére is megmaradt (korlát).
