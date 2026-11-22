@@ -101,7 +101,7 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
      címre ne keressen; egy mű csak egyszer szerepeljen (+ T6 teszteset). Utána: Kuniyoshi és Eishi ukiyo-e hullámai.
   3. *Modellválasztás:* a „gondolkodó” `qwen3-vl:8b` 4–10× lassabb volt érdemi minőségi különbség nélkül → alapértelmezett
      a `qwen3-vl:8b-instruct`.
-  4. *Kritika skill v1.1 → v2.1 – a saját festményeim alapján (csak lokális modellel, a képek nem hagyták el a gépet).*
+  4. *Kritika skill v1.1 → v2.1 – a saját festményeim alapján.*
 
      **Probléma.** Az egyik figurális festményen a ruha redői természetellenesek, de a kritika ezt nem jelezte, sőt
      dicsérte („confident … especially in the figure's face and robe”). A 4 saját kép kritikáinak elemzése:
@@ -226,7 +226,42 @@ Eredmények – Gemini (`gemini-3.5-flash`): `eval/results/gemini_gemini-3.5-fla
   429-nél a szolgáltató kivárja az API által kért időt és újrapróbál; napi limitnél azonnal barátságos hiba
   (`QuotaExceeded`). Egy kritika ~3–4 kérés (előszűrés + tool-ciklus + végső válasz), így naponta ~5 kritika fér bele.
 
-✏️ Kvalitatív értékelés: saját festményeiden (lokális modell) a kritika mennyire egyezik a saját véleményeddel?
+**Kvalitatív értékelés – a saját festményeim (lokális modell, v1.1 → v2.1).** Négy saját képet (egy színes
+ceruzás rajz, három akril festmény) vetettem össze a kritikákkal, a saját szakmai véleményemmel szemben.
+
+| Kép | v1.1 | v2.1 | Egyezik a véleményemmel? |
+|---|---|---|---|
+| Színes ceruzás rajz | a médiumot nem vette észre („brushwork”-öt dicsért), a javaslat a másolt sablon | konkrét gyengeség: a folyékony anyag rajzolt vonalnak hat (éles szélek, nincs fényes folt); puhább ceruzát / maszatolót javasol | **igen** – valóban ez a gyenge pont |
+| Akril, természeti motívum | általános („sötétítsd a hátteret, növeld a telítettséget”) | a tollazat lapos, egyenletes szín, nincs irányított áramlás; a kisebb elemek „festett pöttyöknek” hatnak | **nagyrészt** – a felület valóban követhetné jobban a forma irányát; a leggyengébb terület futásonként váltott, de a diagnózis ugyanaz maradt |
+| Akril, figurális | a ruharedők hibáját nem jelezte (lásd 5. fejezet, 4. iteráció) | 4 futásból 3-ban a kelléket nevezte leggyengébbnek („lapos, nincs fényfolt, nem hat kerámiának”); egy futásban a szemet túl sötétnek ítélte | **részben** – a kellék valóban fejlesztésre szorul, a szemet viszont jónak tartom |
+| Akril, naplemente-sziluett | kitalált részletet javasolt (fényfolt a sziluett „szemén vagy szarván”) | a szándékosan lapos sziluettet továbbra is hibának vette („kivágott papírnak hat”), a kifejezett stílusszabály ellenére is | **nem** – ez a legvilágosabb melléfogás: magát a stílust ítélte meg félre |
+
+**Találatok.**
+- v2.1-től médiumhoz illő tanács: maszatoló a ceruzához, lazúrozás és száraz ecset az akrilhoz.
+- Anyagszerűségi problémák megnevezése (a folyékony anyag nem hat folyadéknak, a tollazat, a „pöttyökként” ható elemek).
+
+**Melléfogások.**
+- A sziluett stílusának félreértése (lásd fent).
+- v1.1-ben kitalált részlet: a sziluett fülét szarvnak nézte, és „szemet” is említett, holott a kép egyszerű sziluett – szem nincs rajta.
+- Mind a négy képre ugyanazt a sablonos dicséretet adta („centered, balanced composition”).
+- Képszerkesztő-szóhasználat maradt („increase saturation of the reds”).
+
+**v1.1 és v2.1 összevetése.**
+- *Javaslatok:* sokkal konkrétabbak. v1.1 mind a négy képre ugyanazt a másolt javaslatot adta; v2.1 helyet és a médiumhoz illő fizikai lépést nevez meg.
+- *Pontszámok:* őszintébbek. v1.1 szinte azonos összpontszámokat adott (7,4–7,6; kompozíció 8, szín 9, valőr 6 minden képre – az egyik kép is 9-es színt kapott 9%-os telítettség mellett), v2.1 szórja a pontokat (ecsetkezelés 5–6, szín 6–8), és minden kép kap egy megnevezett gyenge területet.
+- *Hízelgés:* csökkent, de nem szűnt meg; az erősségek még kissé általánosak, a „centered composition” dicséret ismétlődik.
+
+**Fennmaradó gyengeségek.**
+- *Instabil „leggyengébb terület”:* a kis lokális modell választása futásonként változik (kellék vs. ruha, farok vs. test), ezért egyetlen futás nem perdöntő.
+- *Stílus félreértése:* a szándékos stilizációt hibának veszi.
+- *Visszhangzó ellenőrzőlista:* a promptban szereplő anyag-/redőkérdés a Vermeer-festmény drapériájának kritikáját is előhívta; mivel a promptot egy saját kép hibáját ismerve írtam, a teszt nem teljesen független.
+- *Maradék szóhasználat:* általános erősségek és képszerkesztő-stílusú kifejezések.
+- *Nincs újramérve:* a teljes regressziós kiértékelést nem futtattam újra v2.1-gyel, így a következetessége és az injection-ellenállása nem igazolt.
+- *Fotókorlát:* textúra, méret és valódi szín fotóból nem ítélhető meg.
+
+**Bizalom.** Második szempárként használható, nem bíróként.
+- *Megbízható:* a mért elemzés (paletta, valőr, kompozíció), mert számított, nem becsült; a területenkénti vizsgálat jó ellenőrzőlista arra, hová nézzek; a referenciakereső jó tanulóanyag-forrás.
+- *Nem megbízható:* a pontszámok és az egy futásból származó „leggyengébb terület”; stilizált műveknél pedig különösen nem.
 
 ## 9. Ami túlmutat az órán tanultakon
 
