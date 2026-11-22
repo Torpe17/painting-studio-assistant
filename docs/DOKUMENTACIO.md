@@ -4,8 +4,6 @@
 
 *Mesterséges intelligencia eszközök és alkalmazások (VEMIVIM333MA), 2026/27/1 · Készítette: Luksa Laura (D7CFWT)*
 
-> ✏️ = a saját mérésekkel / tapasztalatokkal kitöltendő részek.
-
 ## 1. A probléma és a cél
 
 Az amatőr és tanuló festők ritkán kapnak rendszeres, szakmai visszajelzést. Az általános chatbotok
@@ -104,7 +102,8 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
   3. *Modellválasztás:* a „gondolkodó” `qwen3-vl:8b` 4–10× lassabb volt érdemi minőségi különbség nélkül → alapértelmezett
      a `qwen3-vl:8b-instruct`.
   4. *Kritika skill v1.1 → v2.1 – a saját festményeim alapján (csak lokális modellel, a képek nem hagyták el a gépet).*
-     **Probléma:** az egyik figurális festményen a ruha redői természetellenesek, de a kritika ezt nem jelezte, sőt
+
+     **Probléma.** Az egyik figurális festményen a ruha redői természetellenesek, de a kritika ezt nem jelezte, sőt
      dicsérte („confident … especially in the figure's face and robe”). A 4 saját kép kritikáinak elemzése:
      - a prompt egyetlen példajavaslatát („darken the background value by 1–2 steps around the head”) a modell
        mind a 4 képnél szinte szó szerint átvette (a többi képnél is ugyanígy, csak a tárgyat cserélve);
@@ -113,24 +112,38 @@ Két deklaratív skill, `skills/<név>/SKILL.md` formában (YAML fejléc + Markd
        elriasztott a nem mérhető (szemmel látható) hibáktól;
      - médiumtól független szóhasználat (színes ceruzánál „brushwork”), képszerkesztő-nyelv („+10–20% telítettség”),
        nyers koordináták a szövegben („[0.48, 0.54]”).
-     **Változtatások:** (a) új séma-mezők a pontozás ELŐTT: `area_review` (2–4 fő terület egyenkénti vizsgálata:
-     forma, fényirány, anyag, élek – strukturált gondolatmenet) és `weakest_area` (a leggyengébb konkrét terület);
-     az 1. javaslatnak ezt kell javítania; (b) a példajavaslat törölve, minden javaslat helyet + fizikai festési
-     lépést nevez meg a művész médiumában (a megjegyzésből); (c) horgonyzott pontozási skála (6-ról indul, csak
-     bizonyítékkal mozdul); (d) stílushoz igazított kérdések (absztrakt: ritmus, forma-változatosság; sziluett:
-     a laposság választás) + önellenőrzés („ha a gyengeség valójában a stílus, válassz mást”); (e) „egy terület =
-     egy tárgy”; (f) a kompozíció-tool a modellnek már csak szóbeli pozíciókat ad (a felület a teljes számokat kapja);
-     (g) kódos ellenőrzés: általános/kategórianév „leggyengébb terület” → figyelmeztetés.
-     **Eredmény (lokális, qwen3-vl:8b-instruct, 4 futás a területvizsgálattal):** a ruha hibáját a modell mind a
-     4 futásban jelezte (v1.1-ben egyszer sem): 3-szor a területvizsgálatban („don't convincingly follow the body
-     underneath… more like abstract shapes than gravity-driven drapery”), 1-szer leggyengébb területként; a másik
-     3 futásban egy kisebb kellék lett a leggyengébb terület, a ruha pedig a 2–3. javaslatban szerepelt. A másik képeknél is egy konkrét részlet lett a cél; a javaslatok médiumspecifikusak
-     („use a softer pencil or a blending stump”, „glaze… white acrylic”). Közben két **regressziót** fogtunk meg és
-     javítottunk: Kandinszkijnél „következetes fényirányt” kért (→ absztrakt-szabály, utána helyes), az egyik sziluettes képnél
-     a szándékos sziluett laposságát hibának vette – ez a 8B modellnél a szabály ellenére is megmaradt (korlát).
-     *Megjegyzés az értékelés tisztaságáról:* a promptba került ellenőrző kérdés („do fabric folds follow the body
-     and hang with gravity?”) általános festészeti tudás, de a ruharedők hibáját ismerve fogalmaztuk – ezért a Vermeernél
-     is megjelent a redők kritikája (ellenőrzőlista-visszhang). Független ellenőrzéshez új saját képek kellenek.
+
+     **Változtatások.**
+     - *(a) Séma:* új mezők a pontozás ELŐTT – `area_review` (2–4 fő terület egyenkénti vizsgálata: forma,
+       fényirány, anyag, élek; strukturált gondolatmenet) és `weakest_area` (a leggyengébb konkrét terület);
+       az 1. javaslatnak ezt kell javítania.
+     - *(b) Javaslatok:* a példajavaslat törölve; minden javaslat helyet + fizikai festési lépést nevez meg a
+       művész médiumában (a megjegyzésből).
+     - *(c) Pontozás:* horgonyzott skála (6-ról indul, csak bizonyítékkal mozdul).
+     - *(d) Stílus:* stílushoz igazított kérdések (absztrakt: ritmus, forma-változatosság; sziluett: a laposság
+       választás) + önellenőrzés („ha a gyengeség valójában a stílus, válassz mást”).
+     - *(e) Területek:* „egy terület = egy tárgy”.
+     - *(f) Kompozíció-tool:* a modellnek már csak szóbeli pozíciókat ad (a felület a teljes számokat kapja).
+     - *(g) Kódos ellenőrzés:* általános/kategórianév „leggyengébb terület” → figyelmeztetés.
+
+     **Eredmény** (lokális, qwen3-vl:8b-instruct, 4 futás a területvizsgálattal):
+     - a ruharedők hibáját a modell mind a 4 futásban jelezte (v1.1-ben egyszer sem): 3-szor a
+       területvizsgálatban („don't convincingly follow the body underneath… more like abstract shapes than
+       gravity-driven drapery”), 1-szer leggyengébb területként;
+     - a másik 3 futásban egy kisebb kellék lett a leggyengébb terület, a ruharedők pedig a 2–3. javaslatban
+       szerepeltek;
+     - a másik képeknél is egy konkrét részlet (anyagszerűség, felületkezelés) lett a cél, a javaslatok
+       médiumspecifikusak („use a softer pencil or a blending stump”, „glaze… white acrylic”).
+
+     **Regressziók** (közben megfogtuk és javítottuk):
+     - Kandinszkijnél „következetes fényirányt” kért → absztrakt-szabály, utána helyes;
+     - az egyik sziluettes képnél a szándékos sziluett laposságát hibának vette – ez a 8B modellnél a szabály
+       ellenére is megmaradt (korlát).
+
+     **Megjegyzés az értékelés tisztaságáról.** A promptba került ellenőrző kérdés („do fabric folds follow the
+     body and hang with gravity?”) általános festészeti tudás, de a ruharedők hibáját ismerve fogalmaztuk – ezért
+     a Vermeernél is megjelent a redők kritikája (ellenőrzőlista-visszhang). Független ellenőrzéshez új saját
+     képek kellenek.
   5. *Referencia skill v1.3 → v1.4:* a modell olyan tartalmat tulajdonított a múzeumi műveknek, amit nem látott
      (Gauguin csendéletében „chocolate-like elements”), és színes ceruzás rajzhoz impasztót javasolt. Új szabály:
      a „why” csak a visszakapott metaadatokra (cím, alkotó, dátum, technika) épülhet, a gyakorlat a művész médiumában.
